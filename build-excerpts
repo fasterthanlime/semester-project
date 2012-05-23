@@ -2,5 +2,5 @@
 
 for i in excerpts/*.ooc; do
     echo "Building $i"
-    pygmentize -f tex -o $i.tex $i
+    pygmentize -O style=bw -f tex -o $i.tex $i
 done
