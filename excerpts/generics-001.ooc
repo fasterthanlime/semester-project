@@ -1,5 +1,5 @@
 
-identity: func <T> (value: T) -> {
+identity: func <T> (value: T) -> T {
     value
 }
 

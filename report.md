@@ -1,8 +1,3 @@
-# Semester project
-
- * Student: Amos Wenger (amos@official.fm)
- * Supervisor: Philippe Suter (philippe.suter@epfl.ch)
-
 ## Abstract
 
 The purpose of this project is to optimize the performance of generics in the

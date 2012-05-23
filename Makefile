@@ -2,7 +2,7 @@
 .PHONY: report excerpts
 
 report: excerpts
-	pandoc -s report.md -H header.tex -o report.pdf
+	pandoc -s report.md -H header.tex -B before-body.tex -o report.pdf
 	
 excerpts:
 	./build-excerpts
