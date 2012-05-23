@@ -1,8 +1,14 @@
 
-.PHONY: report
+.PHONY: report excerpts
 
-report:
-	pandoc -s report.md -o report.pdf
+report: excerpts
+	pandoc -s report.md -H header.tex -o report.pdf
+	
+excerpts:
+	./build-excerpts
+
+preview: report
+	xdg-open report.pdf
 
 clean:
 	rm -f report.pdf

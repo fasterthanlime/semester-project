@@ -3,4 +3,8 @@
 .libs
 snowflake
 report.pdf
+*.aux
+*.out
+*.log
+excerpts/*.tex
 

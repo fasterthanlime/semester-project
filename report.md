@@ -1,4 +1,3 @@
-
 # Semester project
 
  * Student: Amos Wenger (amos@official.fm)
@@ -65,6 +64,8 @@ outputted, it is even possible to step through ooc code in gdb, for instance.
 ## Generics in ooc (pre-specialization)
 
 ### Usage
+
+\input{excerpts/generics-001.ooc.tex}
 
 ### Implementation
 
