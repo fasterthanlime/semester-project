@@ -1,5 +1,6 @@
 #!/bin/bash
 
-for i in excerpts/*.ooc
-    do pygmentize -f tex -o $i.tex $i
+for i in excerpts/*.ooc; do
+    echo "Building $i"
+    pygmentize -f tex -o $i.tex $i
 done

@@ -65,7 +65,20 @@ outputted, it is even possible to step through ooc code in gdb, for instance.
 
 ### Usage
 
+This is the canonical generic function, `identity`: it simply returns exactly
+what has been passed to it.
+
 \input{excerpts/generics-001.ooc.tex}
+
+There is no type erasure in ooc, which means generic type arguments can be explored
+at runtime, like this:
+
+\input{excerpts/generics-002.ooc.tex}
+
+Classes can be generic too. A simple generic container could be implemented
+like this:
+
+\input{excerpts/generics-container.ooc.tex}
 
 ### Implementation
 
