@@ -58,7 +58,7 @@ outputted, it is even possible to step through ooc code in gdb, for instance.
 
 ## Generics in ooc (pre-specialization)
 
-### Usage
+### Generic functions
 
 This is the canonical generic function, `identity`: it simply returns exactly
 what has been passed to it.
@@ -70,12 +70,80 @@ at runtime, like this:
 
 \input{excerpts/generics-002.ooc.tex}
 
+A limited amount of matching can be done on the type of a generic argument:
+
+\input{excerpts/generics-match.ooc.tex}
+
+More advanced matching can also be done on the generic argument itself, alleviating the need for explicit casts.
+
+\input{excerpts/generics-match2.ooc.tex}
+
+### Generic classes
+
 Classes can be generic too. A simple generic container could be implemented
 like this:
 
 \input{excerpts/generics-container.ooc.tex}
 
+Any class can be made generic, but in practice, they are used mostly for collections:
+
+\input{excerpts/generics-collection.ooc.tex}
+
+Classes and functions can have any number of generic parameters:
+
+\input{excerpts/generics-kv.ooc.tex}
+
+### Basic types
+
+The reason the `repr` function above cannot be simply handled with a virtual
+method call is that, in ooc, not everything is an object. Types like `Int`
+and `Octet` are covers from C type:
+
+\input{excerpts/covers.ooc.tex}
+
+Will print:
+
+```
+  int size = 4 bytes
+octet size = 1 bytes
+```
+
+As in Java, all objects in ooc are references. ooc has single inheritance,
+and ultimately every object inherits from the `Object` class
+
+\input{excerpts/classes.ooc.tex}
+
+Will print:
+
+```
+reference size = 4 bytes
+ instance size = 5 bytes
+```
+
+...if the C compiler does packing. Otherwise, the char will probably get aligned
+to 4 bytes, and the instance size will be 8.
+
 ### Implementation
+
+Since generic arguments can be either basic types or object types, the code
+generated can handle arguments of any size. C has no explicit support for
+variable-sized types [^1], the implementation uses pointers to a memory
+area, and memory copy operations instead of assignment.
+
+[^1]: That's not entirely accurate: C99 supports VLAs (Variable-Length Arrays),
+    
+
+Here's an example of the C code generated for the above `identity` function:
+
+\input{excerpts/identity.c.tex}
+
+And a call to identity, such as the following:
+
+\input{excerpts/identity-call.ooc.tex}
+
+Would be translated in C as:
+
+\input{excerpts/identity-call.c.tex}
 
 ### Performance problems
 

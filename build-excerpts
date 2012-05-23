@@ -1,6 +1,9 @@
 #!/bin/bash
 
-for i in excerpts/*.ooc; do
-    echo "Building $i"
+for i in excerpts/*.ooc excerpts/*.c; do
+    printf "\r                                                                 "
+    printf "\rBuilding $i"
     pygmentize -O style=bw -f tex -o $i.tex $i
 done
+printf "\r                                                                 "
+printf "\rBuilt all excerpts.\n"
