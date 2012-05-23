@@ -3,7 +3,11 @@
 for i in excerpts/*.ooc excerpts/*.c; do
     printf "\r                                                                 "
     printf "\rBuilding $i"
-    pygmentize -O style=bw -f tex -o $i.tex $i
+    SRC=$i
+    DST=$i.tex
+    if [[ ${SRC} -nt ${DST} ]]; then
+        pygmentize -O style=bw -f tex -o $i.tex $i
+    fi
 done
 printf "\r                                                                 "
 printf "\rBuilt all excerpts.\n"

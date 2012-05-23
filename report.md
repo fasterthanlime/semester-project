@@ -131,7 +131,9 @@ variable-sized types [^1], the implementation uses pointers to a memory
 area, and memory copy operations instead of assignment.
 
 [^1]: That's not entirely accurate: C99 supports VLAs (Variable-Length Arrays),
-    
+    which are allocated on the stack (like local variables of basic types in ooc),
+    but their limitations render them worthless in our case: you can't return
+    VLAs, and furthermore, keeping track of stack allocated memory is tricky.
 
 Here's an example of the C code generated for the above `identity` function:
 
@@ -144,6 +146,12 @@ And a call to identity, such as the following:
 Would be translated in C as:
 
 \input{excerpts/identity-call.c.tex}
+
+Similarly, when declaring variables of a generic type (inside a generic
+class, for example), they are allocated on the heap. Although the memory
+is eventually reclaimed by the garbage collector [^2], 
+
+[^2]: rock uses the Boehm garbage collector
 
 ### Performance problems
 
