@@ -155,7 +155,28 @@ is eventually reclaimed by the garbage collector [^2],
 
 ### Performance problems
 
+The current implementation of generics suffers from a few performance problems.
+Because of the generality of the machine code that is eventually produced, there
+is a significant amount of lost opportunity for optimization.
+
+For example, if we knew - at compile time - the generic types that were later
+going to be used, we could use much faster primitives for memory allocation and
+copy.
+
+For this semester project, we will focus on the performance of the ooc library
+'inception-engine', an open-source game engine that mimics the dynamic nature
+of the well-known Source engine.
+
+<!-- ![Screenshot of the inception engine in action](images/inception.png) -->
+
 ## Specialization implementation
+
+The basic idea behind specialization is to turn a subset of generic instances
+into template instances, statically compiled to type-specific code. For example,
+the identity function as described above, when used with an integer argument,
+would compile down to this specialized code:
+
+\input{excerpts/identity-int.c.tex}
 
 ### AST transformations
 
@@ -170,4 +191,6 @@ is eventually reclaimed by the garbage collector [^2],
 ### Runtime
 
 ## Conclusion
+
+
 
