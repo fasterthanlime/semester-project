@@ -1,10 +1,14 @@
-## Abstract
+% Specialization in ooc
+% Amos Wenger
+% June 8, 2012
+
+# Abstract
 
 The purpose of this project is to optimize the performance of generics in the
 ooc programming language via the implementation of specialization in rock, its
 main compiler.
 
-## The ooc programming language
+# The ooc programming language
 
 ooc is a general-purpose programming language I designed in early 2009, in
 order to be able to write an EPFL assignment in an object-oriented language
@@ -20,7 +24,7 @@ of experiments one would use C in: for example, a fork of the ooc SDK was made
 compilable for the TI-89 calculator. There have also been successful attempts
 to use ooc on Haiku OS, the modern clone of BeOS.
 
-### ooc vs C++
+## ooc vs C++
 
 ooc is in some ways comparable to C++. The original meaning of ooc was *object-
 oriented C*, which is similar in spirit to C++'s *c with classes*. However,
@@ -36,7 +40,7 @@ ooc also tries to be leaner than C++: it has less features, while still
 remaining general enough to be relevant for most tasks. Another distinctive
 difference is in the implementation of generics versus templates.
 
-### ooc vs C#/Java
+## ooc vs C#/Java
 
 As far as class-oriented languages go, C# and Java are arguably the two most
 remarkable running on VMs. The fact that ooc's initial implementation does not
@@ -56,7 +60,7 @@ practice I have found that classical instrumentation tools such as gdb,
 valgrind, gcov, gprof, etc. all worked very well. Since #line instructions are
 outputted, it is even possible to step through ooc code in gdb, for instance.
 
-## Generics in ooc (pre-specialization)
+## Generics
 
 ### Generic functions
 
@@ -93,7 +97,7 @@ Classes and functions can have any number of generic parameters:
 
 \input{excerpts/generics-kv.ooc.tex}
 
-### Basic types
+## Types
 
 The reason the `repr` function above cannot be simply handled with a virtual
 method call is that, in ooc, not everything is an object. Types like `Int`
@@ -120,15 +124,17 @@ reference size = 4 bytes
  instance size = 5 bytes
 ```
 
-...if the C compiler does packing. Otherwise, the char will probably get aligned
-to 4 bytes, and the instance size will be 8.
+...if the C compiler does packing. Otherwise, the char will probably get
+aligned to 4 bytes, and the instance size will be 8.
 
-### Implementation
+# Original implementation
+
+## Generic arguments and return types
 
 Since generic arguments can be either basic types or object types, the code
 generated can handle arguments of any size. C has no explicit support for
-variable-sized types [^1], the implementation uses pointers to a memory
-area, and memory copy operations instead of assignment.
+variable-sized types [^1], the implementation uses pointers to a memory area,
+and memory copy operations instead of assignment.
 
 [^1]: That's not entirely accurate: C99 supports VLAs (Variable-Length Arrays),
     which are allocated on the stack (like local variables of basic types in ooc),
@@ -147,13 +153,15 @@ Would be translated in C as:
 
 \input{excerpts/identity-call.c.tex}
 
-Similarly, when declaring variables of a generic type (inside a generic
-class, for example), they are allocated on the heap. Although the memory
-is eventually reclaimed by the garbage collector [^2], 
+Similarly, when declaring variables of a generic type (inside a generic class,
+for example), they are allocated on the heap. Although the memory is eventually
+reclaimed by the garbage collector [^2], it incurs some additional processing
+(housekeeping done by the garbage collector) that would not be necessary if the
+variable was simply allocated on the stack.
 
 [^2]: rock uses the Boehm garbage collector: <http://www.hpl.hp.com/personal/Hans_Boehm/gc/>
 
-### Conversion
+## Conversion
 
 When generic variables are used in a match, or explicitly cast to a non-generic
 type[^3], some pointer trickery is required in the generated C code. For example,
@@ -166,7 +174,20 @@ like this:
       are unsafe and generally regarded as bad practice. Using a match
       is a much safer way to deal with generic values.
 
-### Performance problems
+## Generic pointers
+
+Generic pointers are yet another can of worm. They can be indexed like C
+arrays, getting or setting individual elements. However, since - again - the
+size of the generic type is not known in advance, code like this:
+
+\input{excerpts/genericptr.ooc.tex}
+
+Requires non-trivial pointer arithmetic in order to maintain the semantics
+of array manipulation in ooc:
+
+\input{excerpts/genericptr.c.tex}
+
+## Performance problems
 
 The current implementation of generics suffers from a few performance problems.
 Because of the generality of the machine code that is eventually produced, there
@@ -182,7 +203,7 @@ of the well-known Source engine.
 
 <!-- ![Screenshot of the inception engine in action](images/inception.png) -->
 
-## Specialization implementation
+# Specialization implementation
 
 The basic idea behind specialization is to turn a subset of generic instances
 into template instances, statically compiled to type-specific code. For example,
@@ -191,21 +212,29 @@ would compile down to this specialized code:
 
 \input{excerpts/identity-int.c.tex}
 
-### The perils of specialization
+## The perils of specialization
 
-There are a few gotchas that are pertaining to specialization: first, due to the
-dynamic nature of generics in ooc, we have to maintain access to the generic types'
-classes in the scope. Which explains the first line in the C code above. If not
-used, an optimizing C compiler will simply remove the declaration. However, if it
-is being used (for run-time type introspection, for example to display a tree of
-type names and their various attributes), it will be available just as well as in
-the un-specialized version.
+### Introspection
+
+There are a few gotchas that are pertaining to specialization: first, due to
+the dynamic nature of generics in ooc, we have to maintain access to the
+generic types' classes in the scope. Which explains the first line in the C
+code above. If not used, an optimizing C compiler will simply remove the
+declaration. However, if it is being used (for run-time type introspection, for
+example to display a tree of type names and their various attributes), it will
+be available just as well as in the un-specialized version.
+
+### Combinatorial explosion
 
 Another thing to consider is the scope of the specialization: which classes and
-methods to specialize, and which to leave unspecialized. While heuristics could
-be developed to find out the most cost-efficient combinations, for this project
-we will simply annotate by hand the methods we feel would gain to be specialized.
-That said, auto-specialization would be an interesting topic for further research.
+methods to specialize, and which to leave unspecialized.
+
+While heuristics could be developed to find out the most cost-efficient
+combinations, for this project we will simply annotate by hand the methods we
+feel would gain to be specialized.  That said, auto-specialization would be an
+interesting topic for further research.
+
+### Type signatures
 
 And finally, in the context of C code generation, specialization is tricky because
 the specialized and the unspecialized versions of a given can method have different
@@ -216,7 +245,9 @@ a shim is easy to make, for example:
 \input{excerpts/identity-shim.c.tex}
 
 Note that, ironically, in order to generate a shim like the above, we have to
-re
+use the same style of checks than in the un-specialized versions (ie. making sure
+the return pointer is non-null), and we have to cast the pointer type, as shown
+in the Conversion section.
 
 ### AST transformations
 
