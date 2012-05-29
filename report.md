@@ -153,6 +153,19 @@ is eventually reclaimed by the garbage collector [^2],
 
 [^2]: rock uses the Boehm garbage collector: <http://www.hpl.hp.com/personal/Hans_Boehm/gc/>
 
+### Conversion
+
+When generic variables are used in a match, or explicitly cast to a non-generic
+type[^3], some pointer trickery is required in the generated C code. For example,
+a casting a generic parameter named value of type T to an integer type would look
+like this:
+
+\input{excerpts/pointer-dance.c.tex}
+
+[^3]: Note that explicit casts from generic types to non-generic types
+      are unsafe and generally regarded as bad practice. Using a match
+      is a much safer way to deal with generic values.
+
 ### Performance problems
 
 The current implementation of generics suffers from a few performance problems.
@@ -177,6 +190,33 @@ the identity function as described above, when used with an integer argument,
 would compile down to this specialized code:
 
 \input{excerpts/identity-int.c.tex}
+
+### The perils of specialization
+
+There are a few gotchas that are pertaining to specialization: first, due to the
+dynamic nature of generics in ooc, we have to maintain access to the generic types'
+classes in the scope. Which explains the first line in the C code above. If not
+used, an optimizing C compiler will simply remove the declaration. However, if it
+is being used (for run-time type introspection, for example to display a tree of
+type names and their various attributes), it will be available just as well as in
+the un-specialized version.
+
+Another thing to consider is the scope of the specialization: which classes and
+methods to specialize, and which to leave unspecialized. While heuristics could
+be developed to find out the most cost-efficient combinations, for this project
+we will simply annotate by hand the methods we feel would gain to be specialized.
+That said, auto-specialization would be an interesting topic for further research.
+
+And finally, in the context of C code generation, specialization is tricky because
+the specialized and the unspecialized versions of a given can method have different
+signatures, implying that they cannot be called the same way (ABI compatibility
+is not maintained). However, in the event that we need to maintain the same signature,
+a shim is easy to make, for example:
+
+\input{excerpts/identity-shim.c.tex}
+
+Note that, ironically, in order to generate a shim like the above, we have to
+re
 
 ### AST transformations
 
