@@ -151,7 +151,7 @@ Similarly, when declaring variables of a generic type (inside a generic
 class, for example), they are allocated on the heap. Although the memory
 is eventually reclaimed by the garbage collector [^2], 
 
-[^2]: rock uses the Boehm garbage collector
+[^2]: rock uses the Boehm garbage collector: <http://www.hpl.hp.com/personal/Hans_Boehm/gc/>
 
 ### Performance problems
 
