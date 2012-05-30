@@ -16,6 +16,8 @@ List: class <X> {
     }
 }
 
+specialize List<Char>
+
 test1: func {
     l := List<Char> new(3) 
     l set(0, 'f')
