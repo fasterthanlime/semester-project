@@ -16,7 +16,7 @@ List: class <X> {
     }
 }
 
-specialize List<Char>
+#specialize List<Char>
 
 test1: func {
     l := List<Char> new(3) 
@@ -33,4 +33,3 @@ test1: func {
 main: func {
     test1()
 }
-
