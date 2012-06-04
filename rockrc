@@ -1,0 +1,2 @@
+export PATH=$PATH:~/Dev/ooc/rock/bin/
+export ROCK_DIST=~/Dev/ooc/rock/
