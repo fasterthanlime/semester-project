@@ -2,4 +2,5 @@
 all:
 	rm -rf snowflake
 	rock
-	(cd snowflake && make)
+	#(cd snowflake && make)
+	colordiff snowflake snowflake-reference
