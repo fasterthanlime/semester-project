@@ -2,7 +2,7 @@
 Glass: class <X> {
 
     init: func (value: X) {
-
+        X name println()
     }
 
 }
