@@ -10,8 +10,8 @@ Glass: class <X> {
 #specialize Glass<Int>
 
 main: func {
-    Glass<Char> new()
-    Glass<Int> new()
+    Glass<Char> new('c')
+    Glass<Int> new(42)
 }
 
 
