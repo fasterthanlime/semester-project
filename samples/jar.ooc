@@ -1,25 +1,20 @@
 
 Jar: class <X> {
-    cookie: X
+    _cookie: X
 
-    //ostracize: func (=cookie) { }
-
-    ostracize: func (cookie: X) {
-        this cookie = cookie
-    }
-
-    getCookie: func -> X { cookie }
+    cookie: func -> X { _cookie }
+    cookie: func ~set (=_cookie)
 }
 
 #specialize Jar<Char> // binks
 
 main: func {
     j := Jar<Int> new()
-    j ostracize(99)
-    printf("j's cookie = %d\n", j getCookie())
+    j cookie(99)
+    printf("j's cookie = %d\n", j cookie())
 
     k := Jar<Char> new()
-    k ostracize('c')
-    printf("k's cookie = %d\n", k getCookie())
+    k cookie('c')
+    printf("k's cookie = %d\n", k cookie())
 }
 

@@ -16,7 +16,9 @@ List: class <X> {
     }
 }
 
-#specialize List<Char>
+Letter: cover from Char { }
+
+#specialize List<Letter>
 
 test1: func {
     l := List<Char> new(3) 
@@ -30,6 +32,19 @@ test1: func {
     println()
 }
 
+test2: func {
+    l := List<Letter> new(3) 
+    l set(0, 'f' as Letter)
+    l set(1, 'a' as Letter)
+    l set(2, 'q' as Letter)
+
+    for (i in 0..l size) {
+        printf("%c", l get(i))
+    }
+    println()
+}
+
 main: func {
     test1()
+    test2()
 }
