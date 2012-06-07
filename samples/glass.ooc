@@ -11,7 +11,7 @@ Glass: class <X> {
 
 main: func {
     Glass<Char> new('c')
-    Glass<Int> new(42)
+    Glass<Int> new(42 as Int)
 }
 
 
