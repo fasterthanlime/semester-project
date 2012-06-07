@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for i in excerpts/*.ooc excerpts/*.c; do
+for i in excerpts/*.ooc excerpts/*.c samples/*.ooc; do
     printf "\r                                                                 "
     printf "\rBuilding $i"
     SRC=$i

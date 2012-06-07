@@ -64,13 +64,13 @@ outputted, it is even possible to step through ooc code in gdb, for instance.
 
 ### Generic functions
 
-This is the canonical generic function, `identity`: it simply returns exactly
+`identity`is the canonical generic function: it simply returns exactly
 what has been passed to it.
 
 \input{excerpts/generics-001.ooc.tex}
 
-There is no type erasure in ooc, which means generic type arguments can be explored
-at runtime, like this:
+Generics are reified, so that generic type parameters can be inspected at
+runtime, like this:
 
 \input{excerpts/generics-002.ooc.tex}
 
@@ -78,26 +78,33 @@ A limited amount of matching can be done on the type of a generic argument:
 
 \input{excerpts/generics-match.ooc.tex}
 
-More advanced matching can also be done on the generic argument itself, alleviating the need for explicit casts.
+More advanced matching can also be done on the generic argument itself,
+alleviating the need for explicit casts.
 
 \input{excerpts/generics-match2.ooc.tex}
 
 ### Generic classes
 
-Classes can be generic too. A simple generic container could be implemented
-like this:
+Classes in ooc accept type parameters as well. A simple generic container
+could be implemented like this:
 
 \input{excerpts/generics-container.ooc.tex}
 
-Any class can be made generic, but in practice, they are used mostly for collections:
+A prime example of generics usage in the ooc codebase is the 'structs' package,
+containing various collections[^go-collections].
 
 \input{excerpts/generics-collection.ooc.tex}
 
-Classes and functions can have any number of generic parameters:
+[^go-collections]: However, to the difference to the Go language, any class
+    accepts generic type parameters, not only collections.
+
+Classes and functions accept any number of generic parameters:
 
 \input{excerpts/generics-kv.ooc.tex}
 
 ## Types
+
+### Covers
 
 The reason the `repr` function above cannot be simply handled with a virtual
 method call is that, in ooc, not everything is an object. Types like `Int`
@@ -111,6 +118,19 @@ Will print:
   int size = 4 bytes
 octet size = 1 bytes
 ```
+
+Covers generate typedefs in the C backend, and are only thin layer over a given
+C type. They allow to use C libraries with an object-oriented syntax, even
+though the library might have its own system of virtual function call under the
+hood.[^gobject]
+
+[^gobject]: This is the case, notably, for the GObject library. Foundation to
+    all libraries GTK and Gnome, it features a remarkably complex object system
+    on top of C, implemented using high-level object definition files and an
+    impressiven number of generated C macros.
+    <http://developer.gnome.org/gobject/>
+
+### Classes
 
 As in Java, all objects in ooc are references. ooc has single inheritance,
 and ultimately every object inherits from the `Object` class
@@ -133,10 +153,10 @@ aligned to 4 bytes, and the instance size will be 8.
 
 Since generic arguments can be either basic types or object types, the code
 generated can handle arguments of any size. C has no explicit support for
-variable-sized types [^1], the implementation uses pointers to a memory area,
+variable-sized types [^vlas], the implementation uses pointers to a memory area,
 and memory copy operations instead of assignment.
 
-[^1]: That's not entirely accurate: C99 supports VLAs (Variable-Length Arrays),
+[^vlas]: That's not entirely accurate: C99 supports VLAs (Variable-Length Arrays),
     which are allocated on the stack (like local variables of basic types in ooc),
     but their limitations render them worthless in our case: you can't return
     VLAs, and furthermore, keeping track of stack allocated memory is tricky.
@@ -155,24 +175,24 @@ Would be translated in C as:
 
 Similarly, when declaring variables of a generic type (inside a generic class,
 for example), they are allocated on the heap. Although the memory is eventually
-reclaimed by the garbage collector [^2], it incurs some additional processing
+reclaimed by the garbage collector [^gc], it incurs some additional processing
 (housekeeping done by the garbage collector) that would not be necessary if the
 variable was simply allocated on the stack.
 
-[^2]: rock uses the Boehm garbage collector: <http://www.hpl.hp.com/personal/Hans_Boehm/gc/>
+[^gc]: rock uses the Boehm garbage collector: <http://www.hpl.hp.com/personal/Hans_Boehm/gc/>
 
 ## Conversion
 
 When generic variables are used in a match, or explicitly cast to a non-generic
-type[^3], some pointer trickery is required in the generated C code. For example,
+type[^unsafe-casts], some pointer trickery is required in the generated C code. For example,
 a casting a generic parameter named value of type T to an integer type would look
 like this:
 
 \input{excerpts/pointer-dance.c.tex}
 
-[^3]: Note that explicit casts from generic types to non-generic types
-      are unsafe and generally regarded as bad practice. Using a match
-      is a much safer way to deal with generic values.
+[^unsafe-casts]: Note that explicit casts from generic types to non-generic types
+    are unsafe and generally regarded as bad practice. Using a match
+    is a much safer way to deal with generic values.
 
 ## Generic pointers
 
@@ -187,21 +207,18 @@ of array manipulation in ooc:
 
 \input{excerpts/genericptr.c.tex}
 
-## Performance problems
+By default, if the last instruction of a non-void ooc function is an expression,
+it is implicitly returned, which explains the second part of the generated code.
+
+## Non-optimatility of the current approach
 
 The current implementation of generics suffers from a few performance problems.
 Because of the generality of the machine code that is eventually produced, there
 is a significant amount of lost opportunity for optimization.
 
-For example, if we knew - at compile time - the generic types that were later
-going to be used, we could use much faster primitives for memory allocation and
-copy.
-
-For this semester project, we will focus on the performance of the ooc library
-'inception-engine', an open-source game engine that mimics the dynamic nature
-of the well-known Source engine.
-
-<!-- ![Screenshot of the inception engine in action](images/inception.png) -->
+Given that we can infer, at compile time, the type parameters used when
+instanciating certain generic classes, optimized machine code could be emitted
+(through a C compiler) for a given subset of these type parameter combinations.
 
 # Specialization implementation
 
@@ -212,17 +229,55 @@ would compile down to this specialized code:
 
 \input{excerpts/identity-int.c.tex}
 
-## The perils of specialization
+Below, we discuss of the major problems linked to the implementation of
+specialiation in a language such as ooc, and the methods used to circumvent said
+problems.
+
+Note that that implementation discussed in this report is available as a branch
+of the rock project on GitHub[^gh-repo].
+
+[^gh-repo]: GitHub is a general-purpose code repository and production suite for
+    software developers, with an emphasis on open-source and collaboration.
+    All of the code for the ooc compiler, associated tools and general
+    library ecosystem around it are hosted there. It even features syntax
+    highlighting for ooc.
+    <https://github.com/nddrylliog/rock/tree/specialize>
+
+## A-priori perils of specialization in ooc
+
+Following are a list of problems that were known ahead of time and made this
+project challenging. In comparison, the Post-mortem section will detail
+unforeseen issues that were encountered while implementing specialization.
 
 ### Introspection
 
-There are a few gotchas that are pertaining to specialization: first, due to
-the dynamic nature of generics in ooc, we have to maintain access to the
-generic types' classes in the scope. Which explains the first line in the C
-code above. If not used, an optimizing C compiler will simply remove the
-declaration. However, if it is being used (for run-time type introspection, for
-example to display a tree of type names and their various attributes), it will
-be available just as well as in the un-specialized version.
+ooc features reified generics[^reified], which means that when a generic type is
+instanciated, rather than erasing its type parameters, it stores them in the
+class structure, next to the vtable. As a result, generic classes can be
+inspected at runtime, along with their type parameters.
+
+[^reified]: This design choice departs significantly from, for example, the Java
+    language and the Scala language. The reason for that is that object
+    semantics are built in the JVM. This decision, criticized by detractors of
+    the JVM, makes it unnecessarily hard to implement alternate OO semantics,
+    perhaps closer to the intent of Alan Kay in Smalltalk, where state is
+    embraced and message-sending is the prime mechanism by which computation
+    is done. However, the state of the art is changing with the JDK 7, thanks
+    to the work of, among others, Charles Nutter, who played a crucial role in
+    the JRuby implementation, and is now championing the development of
+    invokedynamic to better serve dynamic languages on the JVM.
+
+When specializing classes, although the generic parameters become either
+partially or totally fixed at compile time, we cannot simply erase them from the
+class structure, because existing code might depend on them (through
+instanceOf?, or preferably, a match, as demonstrated in the examples above.)
+
+As a result, it is necessary in the generated code, to make available generic
+parameters in the specialized version just as well as in the unspecialized
+version. In function-level specialization, it can be a simple local declaration,
+that can be removed by an optimized compiler in case it is not being utilized.
+
+\input{excerpts/identity-int.c.tex}
 
 ### Combinatorial explosion
 
@@ -249,7 +304,16 @@ use the same style of checks than in the un-specialized versions (ie. making sur
 the return pointer is non-null), and we have to cast the pointer type, as shown
 in the Conversion section.
 
-### AST transformations
+## AST transformations
+
+For the purpose of this project, two types of specializations have been
+implemented: function-level specialization, and class-wide specialization.
+
+### Function-level specialization
+
+While ooc is an object-oriented language, it allows module-level functions that
+are not bound to a specific type. Those functions can be generic too, and are
+potentially subject to specialization as well. In our implementation TODO
 
 ### Resulting code
 

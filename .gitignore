@@ -7,4 +7,5 @@ report.pdf
 *.out
 *.log
 excerpts/*.tex
+samples/*.tex
 
