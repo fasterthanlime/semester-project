@@ -469,6 +469,9 @@ copying of array elements) and the specialized version.
 
 ## Performance improvement
 
+TODO: Implement selection sort and measure the difference between the
+specialized and unspecialized version of the list.
+
 ### Code size
 
 ### Memory usage
