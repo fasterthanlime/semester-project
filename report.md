@@ -12,7 +12,7 @@ main compiler.
 
 ooc is a general-purpose programming language I designed in early 2009, in
 order to be able to write an EPFL assignment in an object-oriented language
-rather directly in C.
+rather than directly in C.
 
 The first ooc-to-C compiler implementation was done in Java, and didn't feature
 any compile-time checks. Many iterations later, the ooc compiler is now
@@ -36,18 +36,30 @@ such as LLVM, the JVM, etc., in spirit, ooc is a language that remains usable
 because even though it is not widespread, it produces readable C output that
 is familiar to a whole generation of programmers.
 
-ooc also tries to be leaner than C++: it has less features, while still
+ooc also tries to be leaner than C++: it has fewer features, while still
 remaining general enough to be relevant for most tasks. Another distinctive
 difference is in the implementation of generics versus templates.
 
 ## ooc vs C#/Java
 
 As far as class-oriented languages go, C# and Java are arguably the two most
-remarkable running on VMs. The fact that ooc's initial implementation does not
+notable running on VMs. The fact that ooc's initial implementation does not
 run in a virtual machine is a deliberate decision: while a VM allows JIT
 optimizations, and wider facilities to debug an application, I saw it as a
-challenge to work on AOT optimizations instead, and make the output portable
+challenge to work on AOT[^aot] optimizations instead, and make the output portable
 enough that a whole VM wouldn't be required to run it.
+
+[^aot]: Just In Time (JIT) optimizations require programs to be ran on a virtual
+    machine that has enough insight to be able to modify the program while it is
+    running in order to make it run faster. Ahead Of Time (AOT) optimizations
+    are made purely at compile time, and makes usage of static analysis and
+    other such techniques in order to predict as accurately as possible the
+    cases for which it is worth optimizing.
+
+    While criticisms apply to both approaches, Profile Guided Optimization (PGO)
+    seems to combine the best of both worlds: it doesn't incur the classical
+    cost of a VM start-up, while still retaining the relevance of JIT
+    optimizations based on real-world data from actual runs.
 
 Note that even though (obviously) binary executables produced by the C compiler
 are not portable, the C source is: that is, rock (the ooc compiler) will produce
@@ -64,7 +76,7 @@ outputted, it is even possible to step through ooc code in gdb, for instance.
 
 ### Generic functions
 
-`identity`is the canonical generic function: it simply returns exactly
+`identity` is the canonical generic function: it simply returns exactly
 what has been passed to it.
 
 \input{excerpts/generics-001.ooc.tex}
@@ -108,7 +120,7 @@ Classes and functions accept any number of generic parameters:
 
 The reason the `repr` function above cannot be simply handled with a virtual
 method call is that, in ooc, not everything is an object. Types like `Int`
-and `Octet` are covers from C type:
+and `Octet` are covers from C types:
 
 \input{excerpts/covers.ooc.tex}
 
@@ -185,7 +197,7 @@ variable was simply allocated on the stack.
 
 When generic variables are used in a match, or explicitly cast to a non-generic
 type[^unsafe-casts], some pointer trickery is required in the generated C code. For example,
-a casting a generic parameter named value of type T to an integer type would look
+casting a generic parameter named value of type T to an integer type would look
 like this:
 
 \input{excerpts/pointer-dance.c.tex}
@@ -196,7 +208,7 @@ like this:
 
 ## Generic pointers
 
-Generic pointers are yet another can of worm. They can be indexed like C
+Generic pointers are yet another can of worms. They can be indexed like C
 arrays, getting or setting individual elements. However, since - again - the
 size of the generic type is not known in advance, code like this:
 
@@ -230,7 +242,7 @@ would compile down to this specialized code:
 \input{excerpts/identity-int.c.tex}
 
 Below, we discuss of the major problems linked to the implementation of
-specialiation in a language such as ooc, and the methods used to circumvent said
+specialization in a language such as ooc, and the methods used to circumvent said
 problems.
 
 Note that that implementation discussed in this report is available as a branch
@@ -291,8 +303,8 @@ interesting topic for further research.
 
 ### Type signatures
 
-And finally, in the context of C code generation, specialization is tricky because
-the specialized and the unspecialized versions of a given can method have different
+Finally, in the context of C code generation, specialization is tricky because
+the specialized and the unspecialized versions of a given method can have different
 signatures, implying that they cannot be called the same way (ABI compatibility
 is not maintained). However, in the event that we need to maintain the same signature,
 a shim is easy to make, for example:
@@ -317,23 +329,25 @@ potentially subject to specialization as well. In our implementation, we use the
 pre-existing inline keyword to mark functions that should be specialized.
 
 The combinations for which a generic function should be specialized are chosen
-by callsite. In theory, this might lead to combinatorial explosin (as seen
-above), but in practice, module-level are rare enough in typical ooc code that
-such an implementation is still relevant.
+by callsite. In theory, this might lead to combinatorial explosion (as seen
+above), but in practice, module-level functions are rare enough in typical ooc
+code that such an implementation is still relevant.
 
-Since the ooc ast is mutable, the first step to specializing a function is to
+Since the ooc AST[^ast] is mutable, the first step to specializing a function is to
 keep a copy of it before any AST mutation can transform it into a full-blown
 generic function. In our implementation, we simply added an `inline` member to
 the `FunctionDecl` AST node.
+
+[^ast]: Abstract Syntax Tree.
 
 The second step is to modify the function call resolution process in order to
 intercept functions that are marked as specializable. This is done by adding a
 condition in the `resolveCall` function of the `FunctionCall`, that calls the
 `specialize` method on the `FunctionDecl`.
 
-In the `specialize`, another copy of the original is made, ready to be
+In the `specialize` method, another copy of the original is made, ready to be
 specialized. Then, we step through each argument of the function and change
-their generic type to the type inferred from the call.
+its generic type to the type inferred from the call.
 
 For example, if a function with generic parameter X took an argument of type X,
 and was called with an argument of type Char, all references to the generic type
@@ -343,10 +357,10 @@ On the side of the function call itself, nothing needs to be changed, except its
 `ref`, which is a reference to the function declaration being called. This will
 ensure that the correct C function is called in the generated code.
 
-The specialized version of a function has a name composed from the name of the
-original function, to which we append a unique generated suffix in order to make
-sure that the additional C function generated doesn't clash with any
-pre-existing code[^generating-c].
+The specialized version of a function has a name composed of the name of the
+original function and a unique generated suffix in order to make sure that the
+additional C function generated doesn't clash with any pre-existing
+code[^generating-c].
 
 [^generating-c]: That technique, while imperfect, is used in many different
     places in the ooc compiler. Because it was designed from the beginning to
@@ -362,7 +376,8 @@ pre-existing code[^generating-c].
 To specialize whole classes, we have taken a different approach. Instead of
 marking class declarations and determining combinations from instanciation site,
 we have introduced a new keyword, `#specialize`, that accepts a fully-qualified
-generic class name. 
+generic class name and marks not the class, but the combination of its generic
+type parameters for specialization.
 
 Adding this keyword required modifying the ooc PEG grammar used by rock, as it
 constitutes an addition to the syntax of the language. Using it carefully in
@@ -389,8 +404,8 @@ easily hooked into in the compiler, except by testing against the name of the
 method, but here again: there is no guarantee that this method is the actual
 constructor.
 
-In fact, in ooc, new is just a normal static method, which allocates an object,
-assigns generic type parameters, and then calls the init (non-static) method on
+In fact, in ooc, `new` is just a normal static method, which allocates an object,
+assigns generic type parameters, and then calls the `init` (non-static) method on
 the newly created instance, returning it shortly thereafter. Due to the flexible
 nature of the language, an object could very well be created from another static
 method, such as `create`, or `fromSomethingElse`[^alt-mem].
@@ -434,10 +449,10 @@ normal class would.
 
 Additions made to the compiler so that it supports specialization do not break
 any existing code. In fact, it was considered to witness its effects on
-inception-engine[ic-github], an ooc game engine that is highly dynamic and allows runtime
+inception-engine[^ic-github], an ooc game engine that is highly dynamic and allows runtime
 manipulation of all entities in the game world at all times.
 
-![a screenshot of inception-engine in action]
+![inception-engine is a good example of real-world usage for ooc](images/inception.png)
 
 [^ic-github]: The source of this project, although dated, still compiles and runs
     on the current version of rock, and is available under a BSD-comaptible
@@ -467,10 +482,13 @@ This code, resorting to higher-level generic primitives, would then allow the
 generation of both the unspecialized version (using `memmov` for fast, anysized
 copying of array elements) and the specialized version.
 
-## Performance improvement
+## Benchmarking
 
-TODO: Implement selection sort and measure the difference between the
-specialized and unspecialized version of the list.
+The benchmark that we are going to use is a simple list sorting algorithm.
+We will compare the respective performance of the specialized and the
+unspecialized version.
+
+\input{samples/sorting.ooc.tex}
 
 ### Code size
 
@@ -486,8 +504,8 @@ However, the remnants of legacy, backend-specific code, prevents this
 implementation from being useful in an even larger context.
 
 However, it forms the basis for a new class of high-performance ooc
-applications, and the new primitives discussed in the `class-wide
-specialization` section will be implemented, along with the inclusion of the
+applications, and the new primitives discussed in the class-wide
+specialization section will be implemented, along with the inclusion of the
 specialization implemented for this project, before the 1.0 release of rock, the
 ooc compiler.
 

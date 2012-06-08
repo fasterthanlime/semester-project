@@ -1,4 +1,4 @@
-import math/Random
+import math/Random, os/Time
 
 List: class <X> {
     data: X*
@@ -21,11 +21,14 @@ List: class <X> {
         (data[i], data[j]) = (get(j), tmp)
     }
 
+    prount: func {}
+
     print: func (f: Func (X) -> String) {
         "(" print()
         for (i in 0..size) {
             f(get(i)) print()
             if (i < size - 1) ", " print()
+            prount()
         }
         ")" println()
     }
@@ -44,7 +47,9 @@ List: class <X> {
     }
 }
 
-test1: func {
+#specialize List<Int>
+
+demo: func {
     l := List<Int> new(10)
     for (i in 0..l size) {
         l set(i, Random randInt(0, 200))
@@ -54,7 +59,19 @@ test1: func {
     l print(|i| "%d" format(i))
 }
 
+benchmark: func {
+    l := List<Int> new(10_000)
+    for (i in 0..l size) {
+        l set(i, Random random())
+    }
+    millis := Time measure(||
+        l bubbleSort!(|a, b| a <=> b)
+    )
+    "Sorting took %d milliseconds" printfln(millis)
+}
+
 main: func {
-    test1()
+    // demo()
+    benchmark()
 }
 
