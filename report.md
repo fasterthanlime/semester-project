@@ -477,5 +477,15 @@ copying of array elements) and the specialized version.
 
 ## Conclusion
 
+In conclusion, the implementation of specialization in the ooc language proved
+to be relatively painless due to the design of generics from the beginning.
+However, the remnants of legacy, backend-specific code, prevents this
+implementation from being useful in an even larger context.
+
+However, it forms the basis for a new class of high-performance ooc
+applications, and the new primitives discussed in the `class-wide
+specialization` section will be implemented, along with the inclusion of the
+specialization implemented for this project, before the 1.0 release of rock, the
+ooc compiler.
 
 
