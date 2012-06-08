@@ -1,1 +1,8 @@
 #!/bin/bash
+
+for i in samples/*.graph; do
+    echo "Building $i"
+    gnuplot < $i
+    epspdf $(basename $i).eps
+done
+echo "Built all graphs"
