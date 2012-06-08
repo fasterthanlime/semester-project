@@ -1,3 +1,4 @@
+include stdint
 import math/Random, os/Time
 
 List: class <X> {
@@ -48,31 +49,60 @@ List: class <X> {
     }
 }
 
-#specialize List<Int>
+Box1: class {
+    value: Int
+    init: func (=value) 
+}
 
-demo: func {
-    l := List<Int> new(10)
+Box2: class {
+    value: Int
+    init: func (=value) 
+}
+
+#specialize List<Box2>
+
+/** sort an unspecialized list of ints with `size` elements
+    and return the number of milliseconds it took */
+unspecialized: func (size: Int) -> UInt {
+    l := List<Box1> new(size)
     for (i in 0..l size) {
-        l set(i, Random randInt(0, 200))
+        l set(i, Box1 new(Random random()))
     }
-    l print(|i| "%d" format(i))
-    l bubbleSort!(|a, b| a <=> b)
-    l print(|i| "%d" format(i))
+    Time measure(||
+        l bubbleSort!(|a, b| a value <=> b value)
+    )
+}
+
+/** sort a specialized list of ints with `size` elements
+    and return the number of milliseconds it took */
+specialized: func (size: Int) -> UInt {
+    l := List<Box2> new(size)
+    for (i in 0..l size) {
+        l set(i, Box2 new(Random random()))
+    }
+    Time measure(||
+        l bubbleSort!(|a, b| a value <=> b value)
+    )
 }
 
 benchmark: func {
-    l := List<Int> new(10_000)
-    for (i in 0..l size) {
-        l set(i, Random random())
+    numRuns := 1
+    "# list_size\ttime_unspecialized\ttime_specialized" println()
+    for (i in 10..15) {
+        size := 1 << i
+        meanUnspe := 0
+        meanSpe := 0
+        for (i in 0..3) {
+            meanUnspe += unspecialized(size) 
+            meanSpe   += specialized(size)
+        }
+        timeUnspe := meanUnspe * (1.0 / numRuns)
+        timeSpe   := meanSpe   * (1.0 / numRuns)
+        "%d\t%u\t%d" printfln(size, timeUnspe, timeSpe)
     }
-    millis := Time measure(||
-        l bubbleSort!(|a, b| a <=> b)
-    )
-    "Sorting took %d milliseconds" printfln(millis)
 }
 
 main: func {
-    demo()
-    // benchmark()
+    benchmark()
 }
 

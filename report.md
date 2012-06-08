@@ -494,6 +494,8 @@ unspecialized version.
 
 ### Runtime
 
+\input{graph.tex}
+
 ## Conclusion
 
 In conclusion, the implementation of specialization in the ooc language proved

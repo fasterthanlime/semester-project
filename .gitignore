@@ -8,4 +8,7 @@ report.pdf
 *.log
 excerpts/*.tex
 samples/*.tex
+*.pdf
+*.eps
+*.tex
 
