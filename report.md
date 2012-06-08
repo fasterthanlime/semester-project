@@ -313,9 +313,157 @@ implemented: function-level specialization, and class-wide specialization.
 
 While ooc is an object-oriented language, it allows module-level functions that
 are not bound to a specific type. Those functions can be generic too, and are
-potentially subject to specialization as well. In our implementation TODO
+potentially subject to specialization as well. In our implementation, we use the
+pre-existing inline keyword to mark functions that should be specialized.
 
-### Resulting code
+The combinations for which a generic function should be specialized are chosen
+by callsite. In theory, this might lead to combinatorial explosin (as seen
+above), but in practice, module-level are rare enough in typical ooc code that
+such an implementation is still relevant.
+
+Since the ooc ast is mutable, the first step to specializing a function is to
+keep a copy of it before any AST mutation can transform it into a full-blown
+generic function. In our implementation, we simply added an `inline` member to
+the `FunctionDecl` AST node.
+
+The second step is to modify the function call resolution process in order to
+intercept functions that are marked as specializable. This is done by adding a
+condition in the `resolveCall` function of the `FunctionCall`, that calls the
+`specialize` method on the `FunctionDecl`.
+
+In the `specialize`, another copy of the original is made, ready to be
+specialized. Then, we step through each argument of the function and change
+their generic type to the type inferred from the call.
+
+For example, if a function with generic parameter X took an argument of type X,
+and was called with an argument of type Char, all references to the generic type
+X would now refer to the concrete type Char.
+
+On the side of the function call itself, nothing needs to be changed, except its
+`ref`, which is a reference to the function declaration being called. This will
+ensure that the correct C function is called in the generated code.
+
+The specialized version of a function has a name composed from the name of the
+original function, to which we append a unique generated suffix in order to make
+sure that the additional C function generated doesn't clash with any
+pre-existing code[^generating-c].
+
+[^generating-c]: That technique, while imperfect, is used in many different
+    places in the ooc compiler. Because it was designed from the beginning to
+    generate C code, tradeoffs were made in order to be facilitate the work of
+    the backend. In retrospect, separating cleanly the C and the ooc backend
+    would have been a much cleaner alternative: this approach is taken in the
+    experimental compiler, oc <https://github.com/nddrylliog/oc>, and more
+    recently in the latest rewrite of rock itself. It is hoped that this clean
+    separation will allow alternative backends to be implemented more easily.
+
+### Class-wide specialization
+
+To specialize whole classes, we have taken a different approach. Instead of
+marking class declarations and determining combinations from instanciation site,
+we have introduced a new keyword, `#specialize`, that accepts a fully-qualified
+generic class name. 
+
+Adding this keyword required modifying the ooc PEG grammar used by rock, as it
+constitutes an addition to the syntax of the language. Using it carefully in
+generic code allows one to hint the compiler as to which specializations would
+be the most beneficial for the performance of the program while retaining a
+relatively small footprint compared to the unspecialized version.
+
+The usage of `#specialize` triggers a copy mechanism similar to the one
+described previously for module-level functions. The class variation, however,
+contains a few interesting differences.
+
+The first one is that in order to resolve generic types to concrete types, a map
+from type parameter name to concrete type. This map is then used in the
+resolving process to make sure that, to take the same example, any access to the
+type X would in fact point to the concrete type Char.
+
+This solves the first part of the problem, which is to actually generate a
+specialized version of the class. The second part of the problem is to use this
+specialized version where it can be used.
+
+This is solved in an interesting way. `new` is not a keyword in ooc. In other
+words, class instanciation is not treated specially, and as such it cannot be
+easily hooked into in the compiler, except by testing against the name of the
+method, but here again: there is no guarantee that this method is the actual
+constructor.
+
+In fact, in ooc, new is just a normal static method, which allocates an object,
+assigns generic type parameters, and then calls the init (non-static) method on
+the newly created instance, returning it shortly thereafter. Due to the flexible
+nature of the language, an object could very well be created from another static
+method, such as `create`, or `fromSomethingElse`[^alt-mem].
+
+[^alt-mem]: These methods are casually utilized when the default allocation
+    strategy is not deemed fit for a particular use case. In some games for
+    example, a memory pool could be used for certain classes of objects subject
+    to rapid creation and destruction in short-term lifes, as it would be less
+    costly than letting the GC handle these memory blocks indiscriminately.
+
+    On embedded systems, such as the TI-89, the Boehm garbage collector could
+    not run at all: a manual allocation strategy was then required to make ooc
+    code run on that platform. In that case, a simple correction of the core of
+    the ooc object system, itself written in ooc, was sufficient.
+
+A very elegant solution was found to this problem: it occured to me that in
+order for the specialized version to be used for compatible instanciations, all
+we had to do was to call the right version of the static function, be it new or
+any other.
+
+In order to achieve this, a check was added at the end of the function resolving
+code (`resolveCall` in the `TypeDecl` AST node) to check if a static method call
+was made on a class that had specializations. If it is the case, then we try to
+match the actual type on which the static function is called to the various
+specializations manually permitted in the code.
+
+The decision whether to use a specialized version of the class or not, and which
+one to use, is made by comparing the scores of different associations of types.
+This method, which we could call quantitative subtyping, is used in various
+places of the ooc compiler in order to allow part of the flexibility that C is
+known to have as far as its type system goes. It is especially useful in the
+context of C covers, where the relations between multiple covers is often fuzzy
+and does not obey the rules of a classical, strict type system.
+
+Once the specialization to be used has been determined by quantitative
+subtyping, the resolution of the `ref` of the static method call is relayed to
+the specialized version of the class, which will then be written just as a
+normal class would.
+
+## Compatibility with legacy code
+
+Additions made to the compiler so that it supports specialization do not break
+any existing code. In fact, it was considered to witness its effects on
+inception-engine[ic-github], an ooc game engine that is highly dynamic and allows runtime
+manipulation of all entities in the game world at all times.
+
+![a screenshot of inception-engine in action]
+
+[ic-github]: The source of this project, although dated, still compiles and runs
+    on the current version of rock, and is available under a BSD-comaptible
+    license on GitHub: <https://github.com/nddrylliog/inception-engine>
+
+However, the usage of `#specialize` with data structures such as
+`structs/ArrayList` and `structs/HashMap` causes issues with parts of the code
+hand-optimized for the initial, naïve implementation of generics.
+
+For example, the `removeAt` method calls directly `memmov` in order to copy
+areas of memory efficiently (instead of moving one element at a time):
+
+\input{excerpts/arraylist-remove.ooc.tex}
+
+This code, instead of using generic facilities in ooc, bypasses them and
+directly calls C functions for performance. Unfortunately, it does not make
+sense in the context of a specialization, and prevents the current
+specialization implementation to be used directly with this SDK.
+
+A possible solution to this problem would be to extend the semantics of pointer
+manipulation in ooc, and allow manipulation on ranges, so that the removeAt
+method could be re-implemented as follows:
+
+\input{excerpts/arraylist-remove2.ooc.tex}
+
+This code, resorting to higher-level generic primitives, would then 
 
 ## Performance improvement
 
