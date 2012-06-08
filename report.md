@@ -333,12 +333,10 @@ by callsite. In theory, this might lead to combinatorial explosion (as seen
 above), but in practice, module-level functions are rare enough in typical ooc
 code that such an implementation is still relevant.
 
-Since the ooc AST[^ast] is mutable, the first step to specializing a function is to
+Since the ooc AST is mutable, the first step to specializing a function is to
 keep a copy of it before any AST mutation can transform it into a full-blown
 generic function. In our implementation, we simply added an `inline` member to
 the `FunctionDecl` AST node.
-
-[^ast]: Abstract Syntax Tree.
 
 The second step is to modify the function call resolution process in order to
 intercept functions that are marked as specializable. This is done by adding a
