@@ -488,7 +488,33 @@ unspecialized version.
 
 \input{samples/sorting.ooc.tex}
 
-### Source size
+### Source and binary size
+
+One downside of specialization is that it produces larger source files and thus,
+larger executables. This next graph shows, in bytes, the difference in size for
+three files: `sorting.c`, the C file with the actual implementation of the
+sorting algorith, `sorting.h`, a header file containing, among other, the
+structure definitions for the vtable, and `sorting-fwd.h`, which contains public
+function prototypes for an ooc module[^double-header].
+
+[^double-header]: The ooc compiler always generate two header files for any
+    module. This allows arbitrary circular dependencies within ooc modules, and
+    proper forward declaration in the generated C code. Those circumvention
+    mechanisms would not be necessary in a target language with a saner
+    modularity paradigm, which is, unfortunately, not the case with C.
+
+    In practice, modules which only instanciate classes or call functions from
+    from the imported module, will only include the forward header
+    (`module-fwd.h`), and modules which contain subtypes of the imported module
+    will import the full header (`module.h`) in order to easily generate the
+    hierarchical vtable structure that characterizes ooc classes.
+
+\input{source-size-graph.tex}
+
+As for the size of the executable, when compiled with clang, it went from XXX to
+YYY when enabling specialization. The impact here is minimal, as most of the
+space in the executable is occupied by the ooc SDK itself, which is not affected
+by our usage of `#specialize`.
 
 ### Memory usage
 

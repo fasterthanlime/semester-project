@@ -1,0 +1,6 @@
+
+set term epslatex
+set output 'source-size-graph.tex'
+set format x ''
+set label y 'size (bytes)'
+plot 'samples/source-size.txt' title 'source size' with boxes
