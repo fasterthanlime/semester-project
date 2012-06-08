@@ -1,0 +1,9 @@
+
+set term epslatex
+set output 'gcc-graph.tex'
+set xlabel 'array size'
+set ylabel 'runtime (ms)'
+plot 'samples/gcc-samples.txt'    using 1:2 title 'unspecialized (-O1)' with linespoint, \
+     'samples/gcc-samples-Os.txt' using 1:2 title 'unspecialized (-Os)' with linespoint, \
+     'samples/gcc-samples.txt'    using 1:3 title 'specialized (-O1)' with linespoint, \
+     'samples/gcc-samples-Os.txt' using 1:3 title 'specialized (-Os)' with linespoint

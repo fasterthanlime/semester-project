@@ -1,0 +1,6 @@
+# list_size     time_unspecialized      time_specialized
+1024    221     29
+2048    825     120
+4096    3457    488
+8192    13799   1978
+16384   55363   8195

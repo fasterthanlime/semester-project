@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for i in samples/*.graph; do
+for i in samples/*-graph; do
     echo "Building $i"
     gnuplot < $i
     epspdf $(basename $i).eps

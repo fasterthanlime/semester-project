@@ -488,13 +488,36 @@ unspecialized version.
 
 \input{samples/sorting.ooc.tex}
 
-### Code size
+### Source size
 
 ### Memory usage
 
-### Runtime
+### Runtime (gcc Ubuntu/Linaro 4.6.3-1ubuntu5)
 
-\input{graph.tex}
+The GNU Compiler Collection is the de-facto standard for open-source compilers.
+It has been used for decades to build sizable collections of C and C++ programs
+such as the Debian project, which contains over 29000 packages.
+
+\input{gcc-graph.tex}
+
+TODO: tables
+
+### Runtime (clang version 3.0-6ubuntu3)
+
+Clang is the gcc-compatible front-end for LLVM, an upcoming challenger to the
+GNU Compiler Collection, which boasts a cleaner codebase, generally faster
+compile times, and more in-depth optimizations. It now regularly beats GCC on
+benchmarks, and several Linux distributions are looking forward to switch their
+toolchain to it entirely[^gentoo-llvm].
+
+This first plot shows the difference in runtimes for 
+ 
+[^gentoo-llvm]: Among them is the Gentoo project:
+    <http://en.gentoo-wiki.com/wiki/Llvm>
+
+\input{clang-graph.tex}
+
+TODO: tables
 
 ## Conclusion
 

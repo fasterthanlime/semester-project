@@ -1,0 +1,6 @@
+# list_size     time_unspecialized      time_specialized
+1024    438     35
+2048    1794    144
+4096    7211    585
+8192    29416   2423
+16384   117503  9595
