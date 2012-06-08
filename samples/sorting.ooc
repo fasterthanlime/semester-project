@@ -19,6 +19,7 @@ List: class <X> {
     swap: func (i, j: Int) {
         tmp := get(i)
         (data[i], data[j]) = (get(j), tmp)
+        bbtrap()
     }
 
     bbtrap: func {}
@@ -29,7 +30,6 @@ List: class <X> {
             x := get(i)
             f(x) print()
             if (i < size - 1) ", " print()
-            bbtrap()
         }
         ")" println()
     }
