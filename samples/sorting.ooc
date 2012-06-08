@@ -21,14 +21,15 @@ List: class <X> {
         (data[i], data[j]) = (get(j), tmp)
     }
 
-    prount: func {}
+    bbtrap: func {}
 
     print: func (f: Func (X) -> String) {
         "(" print()
         for (i in 0..size) {
-            f(get(i)) print()
+            x := get(i)
+            f(x) print()
             if (i < size - 1) ", " print()
-            prount()
+            bbtrap()
         }
         ")" println()
     }
@@ -71,7 +72,7 @@ benchmark: func {
 }
 
 main: func {
-    // demo()
-    benchmark()
+    demo()
+    // benchmark()
 }
 
