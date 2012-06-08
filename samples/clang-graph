@@ -3,7 +3,7 @@ set output 'clang-graph.tex'
 set xlabel 'array size'
 set ylabel 'runtime (ms)'
 set key top left
-plot 'samples/samples.txt'    using 1:2 title 'unspecialized (-O1)' with lines, \
+plot 'samples/samples.txt'    using 1:2 title 'unspecialized (-O0)' with lines, \
      'samples/samples-Os.txt' using 1:2 title 'unspecialized (-Os)' with lines, \
-     'samples/samples.txt'    using 1:3 title 'specialized (-O1)' with lines, \
+     'samples/samples.txt'    using 1:3 title 'specialized (-O0)' with lines, \
      'samples/samples-Os.txt' using 1:3 title 'specialized (-Os)' with lines

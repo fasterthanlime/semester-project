@@ -59,7 +59,7 @@ Box2: class {
     init: func (=value) 
 }
 
-// #specialize List<Box2>
+#specialize List<Box2>
 
 /** sort an unspecialized list of ints with `size` elements
     and return the number of milliseconds it took */

@@ -511,10 +511,10 @@ function prototypes for an ooc module[^double-header].
 
 \input{source-size-graph.tex}
 
-As for the size of the executable, when compiled with clang, it went from XXX to
-YYY when enabling specialization. The impact here is minimal, as most of the
-space in the executable is occupied by the ooc SDK itself, which is not affected
-by our usage of `#specialize`.
+As for the size of the executable, when compiled with clang, it went from 728K
+to 734K with -O0, and from 672K to 674K when with -Os. The impact here is
+minimal, as most of the space in the executable is occupied by the ooc SDK
+itself, which is not affected by our usage of `#specialize`.
 
 ### Memory usage
 
@@ -524,9 +524,18 @@ The GNU Compiler Collection is the de-facto standard for open-source compilers.
 It has been used for decades to build sizable collections of C and C++ programs
 such as the Debian project, which contains over 29000 packages.
 
+The following graph shows execution times in function of the size of an array
+sorted using bubble sort (cf. the algorithm shown above).
+
 \input{gcc-graph.tex}
 
-TODO: tables
+It displays a few unintuitive results: for the unspecialized code, the
+unoptimized version is faster than the version optimized for size. That means
+that gcc is ready to do compromises on the performance of the program in order
+to reduce the size of the executable from 710KB to 665KB.
+
+Interestingly, on the specialized version of the program, GCC performs as
+expected, ie. the `-Os` version is faster by about 60%.
 
 ### Runtime (clang version 3.0-6ubuntu3)
 
@@ -535,27 +544,50 @@ GNU Compiler Collection, which boasts a cleaner codebase, generally faster
 compile times, and more in-depth optimizations. It now regularly beats GCC on
 benchmarks, and several Linux distributions are looking forward to switch their
 toolchain to it entirely[^gentoo-llvm].
-
-This first plot shows the difference in runtimes for 
  
 [^gentoo-llvm]: Among them is the Gentoo project:
     <http://en.gentoo-wiki.com/wiki/Llvm>
 
+We've run the same tests on clang that we did on GCC, in order to compare the
+behavior of different C compilers and interpret them in relation to the produced
+C code.
+
 \input{clang-graph.tex}
 
-TODO: tables
+The results are more in line with what we can expect of an optimizing compiler.
+LLVM seems to strike a better compromise between code size and performance, as
+the compared runtimes of the -Os and -O1 show, both in the unspecialized and
+specialized version.
 
 ## Conclusion
 
 In conclusion, the implementation of specialization in the ooc language proved
 to be relatively painless due to the design of generics from the beginning.
-However, the remnants of legacy, backend-specific code, prevents this
-implementation from being useful in an even larger context.
+Specialization allowed a performance gain of up to 78% in a generics-heavy
+sorting benchmark.
 
-However, it forms the basis for a new class of high-performance ooc
-applications, and the new primitives discussed in the class-wide
-specialization section will be implemented, along with the inclusion of the
-specialization implemented for this project, before the 1.0 release of rock, the
-ooc compiler.
+The remnants of legacy, backend-specific code, prevent this implementation
+from being useful in an even larger context, but this work constitutes a
+solid basis for a new class of high-performance ooc applications, where
+previously, generics types would have been discarded because of their high cost.
 
+The result of this research will be merged in the main trunk of the `rock` ooc
+compiler, along with the implementation of the new generic pointer primitives
+discussed in the Class-wide specialization section, in time for the 1.0 release
+of rock.
+
+## Acknowledgements
+
+I'd like to extend a sincere thank you to the Lab for Automated Reasoning and
+Analysis at EPFL for allowing me to research the performance and optimizations
+of the ooc programming language. In particular, this work was made possible
+thanks to the continued guidance and support of Philippe Sutter, along with
+Etienne Kneuss and Viktor Kuncak.
+
+Thanks to open-source and through GitHub, a countless number of contributors
+got a chance to participate in the specification and implementation of the ooc
+language, including Friedrich Weber, Yannic Ahrens, Nicholas Markwell,
+Alexandros Naskos, Joshua Rösslein, Michael Tremel, Peter Lichard, Scott Olson,
+Noel Cower, Curtis McEnroe, Anthony Roja Buck, Daniel Danopia, Keita Haga,
+Mark Fayngersh, Michael Kedzierski, Patrice Ferlet, and Tim Howard.
 
