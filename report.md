@@ -439,7 +439,7 @@ manipulation of all entities in the game world at all times.
 
 ![a screenshot of inception-engine in action]
 
-[ic-github]: The source of this project, although dated, still compiles and runs
+[^ic-github]: The source of this project, although dated, still compiles and runs
     on the current version of rock, and is available under a BSD-comaptible
     license on GitHub: <https://github.com/nddrylliog/inception-engine>
 
@@ -463,7 +463,9 @@ method could be re-implemented as follows:
 
 \input{excerpts/arraylist-remove2.ooc.tex}
 
-This code, resorting to higher-level generic primitives, would then 
+This code, resorting to higher-level generic primitives, would then allow the
+generation of both the unspecialized version (using `memmov` for fast, anysized
+copying of array elements) and the specialized version.
 
 ## Performance improvement
 
