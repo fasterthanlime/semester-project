@@ -512,6 +512,35 @@ unspecialized version.
 
 \input{samples/sorting.ooc.tex}
 
+### C compiler optimizations
+
+In the following discussion, we often talk about the optimizations C compilers
+do. While we won't go into the details of every optimization, here is a simple
+example of ooc-generated code compiled with clang, based on the identity
+function above. In our test code, the `test1` function calls the
+unspecialized code, the `test2` function calls the manually specialized
+code, and the `test3` function calls the automatically specialized code.
+
+`test1`'s body disassembled gives the following assembly code:
+
+\input{excerpts/call-nonspecialized.S.tex}
+
+Here, we can see that the call is inlined, ie. the body of the identity function
+is copied in whole, but the C compiler fails to see the opportunity for
+optimization, and uses memcpy even though there would be a much faster
+alternative.
+
+On the other hand, `test3`, that calls the specialized version, compiles to:
+
+\input{excerpts/call-specialized.S.tex}
+
+Here, the specialized `identity` function is also inlined, and the compiler goes
+even further: it completely disregards the call and the copy, and directly calls
+println on the original data: this is the furthest we can go with this
+optimization, and with the hints provided by the ooc compiler (ie. specializing
+with the call-site types), the clang/LLVM is able to take full advantage of
+compile-time information.
+
 ### Source and binary size
 
 One downside of specialization is that it produces larger source files and thus,
@@ -553,7 +582,7 @@ sorted using bubble sort (cf. the algorithm shown above).
 
 \input{gcc-graph.tex}
 
-It displays a few unintuitive results: for the unspecialized code, the
+It displays a few unintuitive results: for the non-specialized code, the
 unoptimized version is faster than the version optimized for size. That means
 that gcc is ready to do compromises on the performance of the program in order
 to reduce the size of the executable from 710KB to 665KB.
