@@ -3,4 +3,5 @@ set term epslatex
 set output 'source-size-graph.tex'
 set format x ''
 set ylabel 'source size (bytes)'
+set xlabel 'sorting.c, sorting.h, sorting-fwd.h'
 plot 'samples/source-size.txt' notitle with boxes
