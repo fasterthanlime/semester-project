@@ -27,7 +27,7 @@ to use ooc on Haiku OS, the modern clone of BeOS.
 ## ooc vs C++
 
 ooc is in some ways comparable to C++. The original meaning of ooc was *object-
-oriented C*, which is similar in spirit to C++'s *c with classes*. However,
+oriented C*, which is similar in spirit to C++'s *C with classes*. However,
 there are a few marked differences.
 
 The first and foremost difference is that ooc intends to remain a
@@ -39,6 +39,11 @@ is familiar to a whole generation of programmers.
 ooc also tries to be leaner than C++: it has fewer features, while still
 remaining general enough to be relevant for most tasks. Another distinctive
 difference is in the implementation of generics versus templates.
+
+C++ doesn't have generics, it has templates: instanciation is always done at
+compile-time and incurs a cost in code size. On the other hand, templates are
+often used beyond generic collections, as a metaprogramming mechanism more
+powerful and type-safe than C macros.
 
 ## ooc vs C#/Java
 
@@ -69,10 +74,20 @@ Platform-specific code can be written in ooc thanks to version blocks.
 
 As far as debugging, profiling, and general insight into a program goes, in
 practice I have found that classical instrumentation tools such as gdb,
-valgrind, gcov, gprof, etc. all worked very well. Since #line instructions are
-outputted, it is even possible to step through ooc code in gdb, for instance.
+valgrind, gcov, gprof, etc. all worked very well. Since `#line` instructions are
+output, it is even possible to step through ooc code in gdb, for instance.
+
+Generics appeared in Java 5 in 2004, to be used mostly for collections. In order
+to maintain backward compatibility of the JVM bytecode produced, type parameters
+are erased. As a result, there is only compile-time safety with Java generics,
+and no introspection of generic type parameters is possible.
 
 ## Generics
+
+ooc adopts a middle ground between the C++ way and the Java way: generics allow
+a limited amount of run-time introspection, as type parameters are not erased,
+and the implementation of specialization in this research work allows generics
+to act like templates, when manually marked with a new keyword.
 
 ### Generic functions
 
@@ -107,8 +122,8 @@ containing various collections[^go-collections].
 
 \input{excerpts/generics-collection.ooc.tex}
 
-[^go-collections]: However, to the difference to the Go language, any class
-    accepts generic type parameters, not only collections.
+[^go-collections]: However, in contrast to the Go language, any class accepts generic
+    type parameters, and not exclusively collections.
 
 Classes and functions accept any number of generic parameters:
 
@@ -282,7 +297,7 @@ inspected at runtime, along with their type parameters.
 When specializing classes, although the generic parameters become either
 partially or totally fixed at compile time, we cannot simply erase them from the
 class structure, because existing code might depend on them (through
-instanceOf?, or preferably, a match, as demonstrated in the examples above.)
+`instanceOf?`, or preferably, a match, as demonstrated in the examples above.)
 
 As a result, it is necessary in the generated code, to make available generic
 parameters in the specialized version just as well as in the unspecialized
@@ -493,7 +508,7 @@ unspecialized version.
 One downside of specialization is that it produces larger source files and thus,
 larger executables. This next graph shows, in bytes, the difference in size for
 three files: `sorting.c`, the C file with the actual implementation of the
-sorting algorith, `sorting.h`, a header file containing, among other, the
+sorting algorithm, `sorting.h`, a header file containing, among other, the
 structure definitions for the vtable, and `sorting-fwd.h`, which contains public
 function prototypes for an ooc module[^double-header].
 
@@ -581,7 +596,7 @@ of rock.
 I'd like to extend a sincere thank you to the Lab for Automated Reasoning and
 Analysis at EPFL for allowing me to research the performance and optimizations
 of the ooc programming language. In particular, this work was made possible
-thanks to the continued guidance and support of Philippe Sutter, along with
+thanks to the continued guidance and support of Philippe Suter, along with
 Etienne Kneuss and Viktor Kuncak.
 
 Thanks to open-source and through GitHub, a countless number of contributors
