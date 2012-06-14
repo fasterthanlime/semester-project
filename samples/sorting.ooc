@@ -86,7 +86,7 @@ specialized: func (size: Int) -> UInt {
 }
 
 benchmark: func {
-    numRuns := 1
+    numRuns := 10
     "# list_size\ttime_unspecialized\ttime_specialized" println()
     for (i in 10..15) {
         size := 1 << i
