@@ -556,7 +556,7 @@ function prototypes for an ooc module[^double-header].
     mechanisms would not be necessary in a target language with a saner
     modularity paradigm, which is, unfortunately, not the case with C.
 
-    In practice, modules which only instanciate classes or call functions from
+    In practice, modules which only instanciate classes or call functions
     from the imported module, will only include the forward header
     (`module-fwd.h`), and modules which contain subtypes of the imported module
     will import the full header (`module.h`) in order to easily generate the
