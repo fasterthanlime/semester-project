@@ -453,6 +453,15 @@ known to have as far as its type system goes. It is especially useful in the
 context of C covers, where the relations between multiple covers is often fuzzy
 and does not obey the rules of a classical, strict type system.
 
+Quantitative subtyping attributes an affinity score between a pair of types:
+for example, if two types are equivalent, the score will be maximal. If the
+right-hand-side is a subtype of the left-hand-side, the score will be slightly
+lower, but still positive. Pairs of types that have absolutely no subtyping
+relation (either via extends, implements, or cover from) such as `ArrayList` and
+`HashMap`, will yield negative scores. Operator overloading and function
+overloading use quantitative subtyping extensively to find the best match or, if
+there is none, present a helpful message with the closest match.
+
 Once the specialization to be used has been determined by quantitative
 subtyping, the resolution of the `ref` of the static method call is relayed to
 the specialized version of the class, which will then be written just as a
