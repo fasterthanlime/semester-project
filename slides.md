@@ -47,8 +47,8 @@ doesn't prevent the creation of generic containers, type
 safety is not guaranteed.
 
 C++ meta-programming is done via templates: compile-time
-instanciation, type safety, significant cost in compilation time
-and binary size.
+instanciation, compile-time type safety, significant cost in
+compilation time and binary size. RTTI available via `typeid`.
 
 JVM-based languages (Java, Scala, Groovy, etc.) have generic
 classes, with type erasure because of backwards-compatibility.
@@ -113,11 +113,70 @@ are translated as:
 # The solution's problem
 
 Passing the address of generic values instead of their value directly
-is an extra indirection (dereference)
+is an extra indirection (dereference), which incurs a speed penalty.
 
-# Source size
+Calling `memcpy` is much more expensive than the `=` operator in C.
+No C compiler is smart enough to optimize `memcpy` to something else.
 
-\includegraphics[width=10cm]{source-size-graph}
+`gc_malloc` calls are more expensive than stack allocations (for
+local generic variables).
 
-# Performance gains
+These explanations were based on intuition, the subject of this work
+was to implement generic specialization to assess the performance
+problem and solve it.
+
+# The solution, part II - Specialization
+
+\input{excerpts/identity-generic2.c.tex}
+
+\input{excerpts/identity-int.c.tex}
+
+# The economics of specialization
+
+<https://github.com/nddrylliog/rock/tree/specialize>
+
+  * 41 changed files with 2,233 additions and 2,385 deletions.
+  * Net cost: -152 lines of code
+
+# Using specialization
+
+Our implementation specialize functions that are marked with the
+`inline` keyword (pre-existing, unused).
+
+It also adds a compiler instruction named `#specialize`. It is
+used to manually mark a type parameter combination for specialization:
+
+For example, `#specialize ArrayList<Int>` would make all lists
+of integers faster, and all other combinations would work as
+usual.
+
+# Benchmark
+
+Our benchmark is bubble sort on a simple `ArrayList` implementation.
+
+Full benchmark fits in 100 lines of code.
+
+Available here: https://github.com/nddrylliog/semester-project/
+
+# Source size cost
+
+\includegraphics[width=10cm]{images/source-size.png}
+
+# Performance gains (GCC)
+
+\includegraphics[width=11cm]{images/perf-gcc.png}
+
+# Performance gains (Clang/LLVM)
+
+\includegraphics[width=11cm]{images/perf-clang.png}
+
+# Conclusion
+
+# Questions!
+
+Thanks for listening!
+
+<amos.wenger@epfl.ch>
+
+
 

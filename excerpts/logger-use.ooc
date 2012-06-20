@@ -7,6 +7,6 @@ main: func {
     work()
 
     time := Time currentTimeMillis()
-    logger log("Started at %d" format(time))
+    logger log("Finished at %d" format(time))
 }
 
