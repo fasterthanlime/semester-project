@@ -1,4 +1,4 @@
-Logger: class {
+Logger: class extends Formatter {
     level: Level
     out: Stream
 
@@ -6,8 +6,8 @@ Logger: class {
         level = Level INFO
     }
 
-    log: func (msg, level = Level INFO) {
+    log: func (msg: String, level: Level) {
         if (level <= this level) 
-            format(msg)
+            out print(format(msg))
     }
 }
