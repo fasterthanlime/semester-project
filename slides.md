@@ -10,17 +10,25 @@ Has been used to create games, power live streaming backend architecture (in pro
 
 <https://github.com/languages/ooc>
 
-# Syntax - Class definition
+# Class definition
 
 \input{excerpts/logger.ooc.tex}
 
-# Syntax - Modules, entry point, string formatting
+# Modules, entry point, string formatting
 
 \input{excerpts/logger-use.ooc.tex}
 
-# Syntax - Enums, operator overloading
+# Enums
 
 \input{excerpts/level.ooc.tex}
+
+# Covers (C side)
+
+\input{excerpts/cover-struct.c.tex}
+
+# Covers (ooc side)
+
+\input{excerpts/cover-struct.ooc.tex}
 
 # C++
 
