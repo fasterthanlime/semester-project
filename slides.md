@@ -110,6 +110,16 @@ are translated as:
 
 \input{excerpts/identity-call.c.tex}
 
+# The solution
+
+When casting from a generic type to a concrete type, the generic
+value is `unboxed` by dereferencing its address.
+
+\input{excerpts/pointer-dance2.c.tex}
+
+For arrays of generic types, the position of an element is computed
+at runtime using its index and the size of an element.
+
 # The solution's problem
 
 Passing the address of generic values instead of their value directly
@@ -156,7 +166,15 @@ Our benchmark is bubble sort on a simple `ArrayList` implementation.
 
 Full benchmark fits in 100 lines of code.
 
-Available here: https://github.com/nddrylliog/semester-project/
+<https://github.com/nddrylliog/semester-project/>
+
+# Why not a larger application?
+
+\input{excerpts/arraylist-remove.ooc.tex}
+
+# How to fix legacy code
+
+\input{excerpts/arraylist-remove2.ooc.tex}
 
 # Source size cost
 
@@ -172,11 +190,24 @@ Available here: https://github.com/nddrylliog/semester-project/
 
 # Conclusion
 
-# Questions!
+Specialization proved to be an interesting alternative to the
+no-compromise C++ and JVM models. It allows partial specialization
+of generic types.
+
+Unspecialized code remains as fast as generic collections in C
+(cf. `qsort`), and specialized code performance is comparable to
+C++ template code.
+
+Further work is needed for legacy code to take advantage of
+the optimizations implemented here, because of abstraction leaks.
+
+# Questions
 
 Thanks for listening!
 
 <amos.wenger@epfl.ch>
+
+<https://github.com/nddrylliog/>
 
 
 
