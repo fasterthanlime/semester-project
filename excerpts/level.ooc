@@ -1,0 +1,3 @@
+Level: enum {
+    FINEST, FINER, FINE, CONFIG, INFO, WARNING, SEVERE
+}
